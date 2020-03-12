@@ -13,7 +13,8 @@ import re
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
 
 # Get toy data
@@ -25,6 +26,7 @@ start_string = 'Down the Rabbit-Hole</h3>\n\n<p>'
 start_index = raw_text.find(start_string) + len(start_string)
 end_string = '</p>\n\n<p>End of the Project Gutenberg Etext'
 end_index = raw_text.find(end_string)
+
 trimmed_text = raw_text[start_index:end_index]
 
 # Remove special characters
@@ -41,52 +43,47 @@ text = re.sub(spaces, ' ', text)
 chars = set(text)
 char_to_int = dict((c, i) for i, c in enumerate(chars))
 
-# Tokenize the text
-tokenizer = Tokenizer()
-tokenizer.fit_on_texts(split_lines)
-sequences = tokenizer.texts_to_sequences(split_lines)
-word_index = tokenizer.index_word
-num_words = len(word_index)
-
 # Create X and y
-X = []
+X_raw = []
 y_raw = []
-x_len = 4
-for seq in sequences:
-    for ind in range(x_len, len(seq)):
-        sub_sequence = seq[ind - x_len:ind + 1]
-        X.append(sub_sequence[:-1])
-        y_raw.append(sub_sequence[-1])
-X = np.array(X)
-# Encode y one-hot
-y = np.zeros((len(y_raw), num_words + 1))
-for row, column in enumerate(y_raw):
-    y[row, column] = 1
+seq_length = 100
+for i, char in enumerate(text):
+    if i >= seq_length:
+        sub_string = text[i-100:i]
+        x_instance = [char_to_int[character] for character in sub_string]
+        y_instance = char_to_int[char]
+        X_raw.append(x_instance)
+        y_raw.append(y_instance)
 
-# Make train/test data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# reshape X to be [samples, time steps, features]
+X = np.reshape(X_raw, (len(X_raw), seq_length, 1))
+# normalize
+X = X / float(len(chars))
+
+y = np_utils.to_categorical(y_raw)
+
 
 # Build model
 model = Sequential()
-model.add(layers.Embedding(input_dim=num_words+1, input_length=4,
-                           output_dim=64))
-model.add(layers.LSTM(128))
-model.add(layers.Dropout(0.5))
-model.add(layers.Dense(num_words+1, activation='softmax'))
+model.add(layers.LSTM(256, input_shape=(X.shape[1], X.shape[2])))
+model.add(layers.Dropout(0.2))
+model.add(layers.Dense(y.shape[1], activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam')
 
-model.compile(
-    optimizer='adam',
-    loss='categorical_crossentropy',
-    metrics=['accuracy']
-)
+# Do not need test data as we are trying to learn from the entire dataset and accurate predictions are not important.
+# Minimising the loss function is all that matters.
 
-model.fit(np.array(X_train), y_train,
-          batch_size=256, epochs=512,
-          callbacks=[EarlyStopping(patience=5)])
+# Use checkpoints to save weights each time improvement in loss is achieved
+filepath = "alice_weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+callbacks_list = [checkpoint, EarlyStopping(patience=5)]
 
-model.evaluate(X_test, y_test)
+model.fit(X, y,
+          epochs=100, batch_size=256,
+          callbacks=callbacks_list)
 
-# Generate predictions from the model
+
+# Generate predictions from the model (old method, need to update)
 words_to_add = 10
 og_phrase = 'ryan and dan are'
 for i in range(words_to_add):
