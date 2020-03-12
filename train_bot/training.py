@@ -1,3 +1,12 @@
+"""
+Script that trains a neural network on NL's dialogue and then generates sentences.
+
+To-do:
+- Transfer learning instead of building own model from scratch
+- Hook up to youtube data
+"""
+
+
 import pandas as pd
 import numpy as np
 from tensorflow.keras.models import Sequential
