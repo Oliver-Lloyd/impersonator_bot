@@ -2,7 +2,7 @@
 Script that trains a neural network on NL's dialogue and then generates sentences.
 
 To-do:
-- Transfer learning instead of building own model from scratch
+- Transfer learning instead of building own model from scratch?
 - Hook up to youtube data
 """
 
@@ -74,8 +74,8 @@ model.compile(loss='categorical_crossentropy', optimizer='adam')
 # Minimising the loss function is all that matters.
 
 # Use checkpoints to save weights each time improvement in loss is achieved
-filepath = "alice_weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
-checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+file_path = "alice_weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
+checkpoint = ModelCheckpoint(file_path, monitor='loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint, EarlyStopping(patience=5)]
 
 model.fit(X, y,
@@ -83,21 +83,3 @@ model.fit(X, y,
           callbacks=callbacks_list)
 
 
-# Generate predictions from the model (old method, need to update)
-words_to_add = 10
-og_phrase = 'ryan and dan are'
-for i in range(words_to_add):
-    phrase = og_phrase.split(' ')[i:i+4]
-    encoded = []
-    for word in phrase:
-        if word not in word_index.values():
-            raise ValueError('The word "%s" is not in the transcript.' % word)
-        for ind, string in word_index.items():
-            if word == string:
-                encoded.append(ind)
-                continue
-
-    prediction_probs = model.predict(np.array([encoded]))
-    predicted_word = word_index[np.argmax(prediction_probs[0])]
-    og_phrase = og_phrase + ' ' + predicted_word
-    print(og_phrase)
