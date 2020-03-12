@@ -9,6 +9,7 @@ To-do:
 
 import pandas as pd
 import numpy as np
+import re
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -16,11 +17,29 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 
 # Get toy data
-with open('test_transcripts/unity-minecraft-s2-13.txt', encoding='latin1') as file:
-    text = file.read().split('0', 1)[1]
-split_text = text.split('\n')
+with open('test_transcripts/alice_wonderland.htm') as file:
+    raw_text = file.read()
 
-split_lines = [split_text[x] for x in range(len(split_text)) if x % 2 and len(split_text[x]) >= 5]
+# Select correct text
+start_string = 'Down the Rabbit-Hole</h3>\n\n<p>'
+start_index = raw_text.find(start_string) + len(start_string)
+end_string = '</p>\n\n<p>End of the Project Gutenberg Etext'
+end_index = raw_text.find(end_string)
+trimmed_text = raw_text[start_index:end_index]
+
+# Remove special characters
+text = trimmed_text.replace('\n\n', '\n').replace('\n', ' ')
+text_modifiers = re.compile('<.*?>')
+text = re.sub(text_modifiers, '', text)
+text = text.replace(',)', ')')
+text = text.replace('*&nbsp;', '')
+text = text.replace('&nbsp;', '')
+text = text.replace('*', '')
+spaces = re.compile(' {2,}')
+text = re.sub(spaces, ' ', text)
+
+chars = set(text)
+char_to_int = dict((c, i) for i, c in enumerate(chars))
 
 # Tokenize the text
 tokenizer = Tokenizer()
