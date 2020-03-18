@@ -70,6 +70,10 @@ model.add(layers.Dropout(0.2))
 model.add(layers.Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
+# Store
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
 # Do not need test data as we are trying to learn from the entire dataset and accurate predictions are not important.
 # Minimising the loss function is all that matters.
 
