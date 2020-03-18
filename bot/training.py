@@ -42,7 +42,7 @@ spaces = re.compile(' {2,}')
 text = re.sub(spaces, ' ', text)
 
 chars = set(text)
-char_to_int = dict((c, i/len(chars)) for i, c in enumerate(chars))
+char_to_int = dict((c, i) for i, c in enumerate(chars))
 json = json.dumps(char_to_int)
 f = open("char_to_int.json", "w")
 f.write(json)
@@ -62,6 +62,7 @@ for i, char in enumerate(text):
 
 # reshape X to be [samples, time steps, features]
 X = np.reshape(X_raw, (len(X_raw), seq_length, 1))
+X = X/len(chars)
 
 y = np_utils.to_categorical(y_raw)
 
