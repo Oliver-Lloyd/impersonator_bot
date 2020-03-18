@@ -35,6 +35,7 @@ if __name__ == "__main__":
     text = text.replace('*&nbsp;', '')
     text = text.replace('&nbsp;', '')
     text = text.replace('*', '')
+    text = text.replace('_', '')
     spaces = re.compile(' {2,}')
     text = re.sub(spaces, ' ', text)
 
