@@ -1,3 +1,5 @@
-# impersonator_bot
+# impersoneggor
 
-Small project aiming to build a bot that can generate text in the stylings of Northernlion using transcripts from his youtube videos.
+Training a neural network on Northernlion's youtube videos in order to create a bot that can impersonate him.
+
+Implementations will likely include a Twitter account and Twitch bot.

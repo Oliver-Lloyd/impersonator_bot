@@ -10,6 +10,7 @@ To-do:
 import pandas as pd
 import numpy as np
 import re
+import json
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -42,6 +43,10 @@ text = re.sub(spaces, ' ', text)
 
 chars = set(text)
 char_to_int = dict((c, i) for i, c in enumerate(chars))
+json = json.dumps(char_to_int)
+f = open("char_to_int.json", "w")
+f.write(json)
+f.close()
 
 # Create X and y
 X_raw = []
@@ -57,8 +62,7 @@ for i, char in enumerate(text):
 
 # reshape X to be [samples, time steps, features]
 X = np.reshape(X_raw, (len(X_raw), seq_length, 1))
-# normalize
-X = X / float(len(chars))
+X = X/len(chars)
 
 y = np_utils.to_categorical(y_raw)
 
@@ -70,16 +74,18 @@ model.add(layers.Dropout(0.2))
 model.add(layers.Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
+# Store
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
 # Do not need test data as we are trying to learn from the entire dataset and accurate predictions are not important.
 # Minimising the loss function is all that matters.
 
 # Use checkpoints to save weights each time improvement in loss is achieved
 file_path = "alice_weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
 checkpoint = ModelCheckpoint(file_path, monitor='loss', verbose=1, save_best_only=True, mode='min')
-callbacks_list = [checkpoint, EarlyStopping(patience=5)]
+callbacks_list = [checkpoint, EarlyStopping(patience=3, monitor='loss')]
 
 model.fit(X, y,
           epochs=100, batch_size=256,
           callbacks=callbacks_list)
-
-
