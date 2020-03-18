@@ -76,10 +76,8 @@ model.compile(loss='categorical_crossentropy', optimizer='adam')
 # Use checkpoints to save weights each time improvement in loss is achieved
 file_path = "alice_weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
 checkpoint = ModelCheckpoint(file_path, monitor='loss', verbose=1, save_best_only=True, mode='min')
-callbacks_list = [checkpoint, EarlyStopping(patience=5)]
+callbacks_list = [checkpoint, EarlyStopping(patience=3, monitor='loss')]
 
 model.fit(X, y,
           epochs=100, batch_size=256,
           callbacks=callbacks_list)
-
-
