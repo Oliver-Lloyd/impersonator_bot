@@ -48,8 +48,8 @@ def process_x(requested_text, char_to_int_path='char_to_int.json'):
     return x
 
 
-def generate(input_text, num_chars, model_path='./model.json', char_to_int_path='./char_to_int.json', int_to_char_path='./int_to_char.json'):
-    # Scratch space below for testing
+def generate(input_text, max_words=10, max_chars=140, model_path='./model.json', char_to_int_path='./char_to_int.json', int_to_char_path='./int_to_char.json'):
+    # need to add functionality to end at the first space that occurs after num_chars
     import json
     from numpy import argmax
     with open(char_to_int_path, "r") as f:
@@ -57,9 +57,13 @@ def generate(input_text, num_chars, model_path='./model.json', char_to_int_path=
     with open(int_to_char_path, "r") as f:
         int_to_char = json.loads(f.read())
     og_text = input_text
+    og_spaces = og_text.count(' ')
     model = load_model(model_path, '.')
     input_len = model.input_shape[1]
-    for _ in range(num_chars):
+    for _ in range(max_chars):
+        current_spaces = og_text.count(' ')
+        if current_spaces-og_spaces >= max_words:
+            return og_text
         if len(og_text) < input_len:
             text = og_text
             while len(text) != input_len:
