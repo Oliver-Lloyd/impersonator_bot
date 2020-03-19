@@ -51,6 +51,7 @@ def process_x(requested_text, char_to_int_path='char_to_int.json'):
 def generate(input_text, num_chars, model_path='./model.json', char_to_int_path='./char_to_int.json', int_to_char_path='./int_to_char.json'):
     # Scratch space below for testing
     import json
+    from numpy import argmax
     with open(char_to_int_path, "r") as f:
         char_to_int = json.loads(f.read())
     with open(int_to_char_path, "r") as f:
@@ -70,11 +71,8 @@ def generate(input_text, num_chars, model_path='./model.json', char_to_int_path=
 
         x = process_x(text, 'char_to_int.json')
         predict_probs = model.predict(x)
-        best_prob, best_i = 0, None
-        for i, prob in enumerate(predict_probs[0]):
-            if prob > best_prob:
-                best_prob = prob
-                best_i = i
-        og_text = og_text + int_to_char[str(best_i)]
+        pred_index = argmax(predict_probs)
+        pred_character = int_to_char[pred_index]
+        og_text = og_text + pred_character
 
     return og_text
