@@ -3,3 +3,4 @@ venv/
 .idea/
 *.hdf5
 *.json
+twitter/twitter_keys/*
